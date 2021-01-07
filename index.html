@@ -1,0 +1,158 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CRUD</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <style>
+        .rating {
+            border: none;
+            float: left;
+        }
+        .rating>input {
+            display: none;
+        }
+        .rating>label:before {
+            margin: 5px;
+            font-size: 1.25em;
+            font-family: FontAwesome;
+            display: inline-block;
+            content: "\f005";
+        }
+        .rating>.half:before {
+            content: "\f089";
+            position: absolute;
+        }
+        .rating>label {
+            color: #ddd;
+            float: right;
+        }
+        .rating>input:checked~label,
+        /* show gold star when clicked */
+        .rating>input:checked+label:hover,
+        /* hover current star when changing rating */
+        .rating>input:checked~label:hover,
+        .rating>label:hover~input:checked~label,
+        /* lighten current selection */
+        .rating>input:checked~label:hover~label {
+            color: #FFD900;
+        }
+    </style>
+</head>
+<body>
+    <div ng-app="CrudTable">
+        <div ng-controller="tableController">
+            <table>
+                <tbody>
+                    <tr>
+                        <form name="new-person">
+                            <td><input type="text" placeholder="First Name" ng-model="newPerson.name" /></td>
+                            <td>
+                                <fieldset class="rating">
+                                    <input type="radio" id="star5" name="rating" value="5"
+                                        ng-model="newPerson.rating" /><label class="full" for="star5"
+                                        title="Awesome - 5 stars"></label>
+                                    <input type="radio" id="star4" name="rating" value="4"
+                                        ng-model="newPerson.rating" /><label class="full" for="star4"
+                                        title="Pretty good - 4 stars"></label>
+                                    <input type="radio" id="star3" name="rating" value="3"
+                                        ng-model="newPerson.rating" /><label class="full" for="star3"
+                                        title="Meh - 3 stars"></label>
+                                    <input type="radio" id="star2" name="rating" value="2"
+                                        ng-model="newPerson.rating" /><label class="full" for="star2"
+                                        title="Kinda bad - 2 stars"></label>
+                                    <input type="radio" id="star1" name="rating" value="1"
+                                        ng-model="newPerson.rating" /><label class="full" for="star1"
+                                        title="Sucks big time - 1 star"></label>
+                                </fieldset>
+                            </td>
+                            <td><button type="button" ng-click="add()"
+                                    ng-disabled="!newPerson.name || !newPerson.rating">{{type == 'add' ? 'Add' :
+                                    'Edit'}}</button></td>
+                            <td><button type="button" ng-click="remove()">cancel</button></td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Rating</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="person in people">
+                        <td>{{person.name}}</td>
+                        <td>
+                            <fieldset class="rating">
+                                <input type="radio" id="star5{{$index}}" name="rating{{$index}}" value="5"
+                                    ng-model="person.rating" /><label class="full" for="star5{{$index}}"
+                                    title="Awesome - 5 stars"></label>
+                                <input type="radio" id="star4{{$index}}" name="rating{{$index}}" value="4"
+                                    ng-model="person.rating" /><label class="full" for="star4{{$index}}"
+                                    title="Pretty good - 4 stars"></label>
+                                <input type="radio" id="star3{{$index}}" name="rating{{$index}}" value="3"
+                                    ng-model="person.rating" /><label class="full" for="star3{{$index}}"
+                                    title="Meh - 3 stars"></label>
+                                <input type="radio" id="star2{{$index}}" name="rating{{$index}}" value="2"
+                                    ng-model="person.rating" /><label class="full" for="star2{{$index}}"
+                                    title="Kinda bad - 2 stars"></label>
+                                <input type="radio" id="star1{{$index}}" name="rating{{$index}}" value="1"
+                                    ng-model="person.rating" /><label class="full" for="star1{{$index}}"
+                                    title="Sucks big time - 1 star"></label>
+                            </fieldset>
+                        </td>
+                        <!-- <td><button type="button" ng-click="edit(person,$index)">Edit</button></td> -->
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+<script>
+    angular.module('CrudTable', [])
+        .controller('tableController', function ($scope, $http) {
+            $scope.people = [];
+            $scope.getList = function () {
+                $http.get('http://localhost:3000/users/').then(function (res) {
+                    $scope.people = res.data
+                })
+            }
+            $scope.getList();
+            $scope.newPerson = {}
+            $scope.type = 'add';
+            $scope.add = function () {
+                console.log("$scope.newPerson");
+                if ($scope.type == 'add') {
+                    $http.post('http://localhost:3000/users/', $scope.newPerson).then(function (res) {
+                        $scope.newPerson = {};
+                        $scope.getList();
+                    }).catch(function (err){
+                        console.log(err);
+                    });
+                } else {
+                    $http.put('http://localhost:3000/users/'+$scope.newPerson.id, $scope.newPerson).then(function (res) {
+                        $scope.newPerson = {};
+                        delete $scope.indexId
+                        $scope.type = 'add';
+                        $scope.getList();
+                    });
+                }
+            };
+            // $scope.edit = function (item, index) {
+            //     $scope.type = 'edit';
+            //     $scope.newPerson = angular.copy(item)
+            //     $scope.indexId = index
+            // };
+
+            // $scope.remove = function () {
+            //     $scope.newPerson = {};
+            //     $scope.type = 'add';
+            //     if ($scope.indexId) {
+            //         delete $scope.indexId
+            //     }
+            // };
+        });
+</script>
+</html>
